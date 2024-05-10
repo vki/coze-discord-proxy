@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"coze-discord-proxy/common"
+	"coze-discord-proxy/common/myerr"
 	"coze-discord-proxy/model"
 	"coze-discord-proxy/telegram"
 	"encoding/base64"
@@ -255,8 +256,7 @@ func loadBotConfig() {
 			}
 		}
 	}
-
-	common.LogInfo(context.Background(), fmt.Sprintf("载入配置文件成功 BotConfigs: %+v", BotConfigList))
+	common.SysLog(fmt.Sprintf("载入配置文件成功 BotConfigs: %+v", BotConfigList))
 }
 
 // messageCreate handles the create messages in Discord.
@@ -269,9 +269,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// 尝试获取 stopChan
 	stopChan, exists := ReplyStopChans[m.ReferencedMessage.ID]
 	if !exists {
-		//channel, err := Session.Channel(m.ChannelID)
+		//channel, myerr := Session.Channel(m.ChannelID)
 		// 不存在则直接删除频道
-		//if err != nil || strings.HasPrefix(channel.Name, "cdp-对话") {
+		//if myerr != nil || strings.HasPrefix(channel.Name, "cdp-chat-") {
 		//SetChannelDeleteTimer(m.ChannelID, 5*time.Minute)
 		return
 		//}
@@ -310,26 +310,31 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// 如果消息包含组件或嵌入,则发送停止信号
 	if len(m.Message.Components) > 0 {
+
+		var suggestions []string
+
+		actionRow, _ := m.Message.Components[0].(*discordgo.ActionsRow)
+		for _, component := range actionRow.Components {
+			button := component.(*discordgo.Button)
+			suggestions = append(suggestions, button.Label)
+		}
+
 		replyOpenAIChan, exists := RepliesOpenAIChans[m.ReferencedMessage.ID]
 		if exists {
 			reply := processMessageCreateForOpenAI(m)
 			stopStr := "stop"
 			reply.Choices[0].FinishReason = &stopStr
+			reply.Suggestions = suggestions
 			replyOpenAIChan <- reply
 		}
 
-		//if ChannelAutoDelTime != "" {
-		//	delTime, _ := strconv.Atoi(ChannelAutoDelTime)
-		//	if delTime == 0 {
-		//		CancelChannelDeleteTimer(m.ChannelID)
-		//	} else if delTime > 0 {
-		//		// 删除该频道
-		//		SetChannelDeleteTimer(m.ChannelID, time.Duration(delTime)*time.Second)
-		//	}
-		//} else {
-		//	// 删除该频道
-		//	SetChannelDeleteTimer(m.ChannelID, 5*time.Second)
-		//}
+		replyOpenAIImageChan, exists := RepliesOpenAIImageChans[m.ReferencedMessage.ID]
+		if exists {
+			reply := processMessageCreateForOpenAIImage(m)
+			reply.Suggestions = suggestions
+			replyOpenAIImageChan <- reply
+		}
+
 		stopChan <- model.ChannelStopChan{
 			Id: m.ChannelID,
 		}
@@ -350,15 +355,13 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	if !exists {
 		channel, err := Session.Channel(m.ChannelID)
 		// 不存在则直接删除频道
-		if err != nil || strings.HasPrefix(channel.Name, "cdp-对话") {
-			//SetChannelDeleteTimer(m.ChannelID, 5*time.Minute)
+		if err != nil || strings.HasPrefix(channel.Name, "cdp-chat-") {
 			return
 		}
 	}
 
 	// 如果作者为 nil 或消息来自 bot 本身,则发送停止信号
 	if m.Author == nil || m.Author.ID == s.State.User.ID {
-		//SetChannelDeleteTimer(m.ChannelID, 5*time.Minute)
 		stopChan <- model.ChannelStopChan{
 			Id: m.ChannelID,
 		}
@@ -389,26 +392,31 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 
 	// 如果消息包含组件或嵌入,则发送停止信号
 	if len(m.Message.Components) > 0 {
+
+		var suggestions []string
+
+		actionRow, _ := m.Message.Components[0].(*discordgo.ActionsRow)
+		for _, component := range actionRow.Components {
+			button := component.(*discordgo.Button)
+			suggestions = append(suggestions, button.Label)
+		}
+
 		replyOpenAIChan, exists := RepliesOpenAIChans[m.ReferencedMessage.ID]
 		if exists {
 			reply := processMessageUpdateForOpenAI(m)
 			stopStr := "stop"
 			reply.Choices[0].FinishReason = &stopStr
+			reply.Suggestions = suggestions
 			replyOpenAIChan <- reply
 		}
 
-		//if ChannelAutoDelTime != "" {
-		//	delTime, _ := strconv.Atoi(ChannelAutoDelTime)
-		//	if delTime == 0 {
-		//		CancelChannelDeleteTimer(m.ChannelID)
-		//	} else if delTime > 0 {
-		//		// 删除该频道
-		//		SetChannelDeleteTimer(m.ChannelID, time.Duration(delTime)*time.Second)
-		//	}
-		//} else {
-		//	// 删除该频道
-		//	SetChannelDeleteTimer(m.ChannelID, 5*time.Second)
-		//}
+		replyOpenAIImageChan, exists := RepliesOpenAIImageChans[m.ReferencedMessage.ID]
+		if exists {
+			reply := processMessageUpdateForOpenAIImage(m)
+			reply.Suggestions = suggestions
+			replyOpenAIImageChan <- reply
+		}
+
 		stopChan <- model.ChannelStopChan{
 			Id: m.ChannelID,
 		}
@@ -463,13 +471,13 @@ func SendMessage(c *gin.Context, channelID, cozeBotId, message string) (*discord
 	}
 
 	for i, sendContent := range common.ReverseSegment(content, 1888) {
-		//sentMsg, err := Session.ChannelMessageSend(channelID, sendContent)
+		//sentMsg, myerr := Session.ChannelMessageSend(channelID, sendContent)
 		//sentMsgId := sentMsg.ID
 		// 4.0.0 版本下 用户端发送消息
 		sendContent = strings.ReplaceAll(sendContent, "\\n", "\n")
 		sentMsgId, err := SendMsgByAuthorization(c, userAuth, sendContent, channelID)
 		if err != nil {
-			var myErr *common.DiscordUnauthorizedError
+			var myErr *myerr.DiscordUnauthorizedError
 			if errors.As(err, &myErr) {
 				// 无效则将此 auth 移除
 				UserAuthorizations = common.FilterSlice(UserAuthorizations, userAuth)
@@ -574,7 +582,7 @@ func stayActiveMessageTask() {
 			var err error
 			if config.ChannelId == "" {
 				nextID, _ := common.NextID()
-				sendChannelId, err = CreateChannelWithRetry(nil, GuildId, fmt.Sprintf("cdp-对话%s", nextID), 0)
+				sendChannelId, err = CreateChannelWithRetry(nil, GuildId, fmt.Sprintf("cdp-chat-%s", nextID), 0)
 				if err != nil {
 					common.LogError(nil, err.Error())
 					break

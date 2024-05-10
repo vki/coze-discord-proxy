@@ -42,6 +42,10 @@ definitions:
         type: string
       object:
         type: string
+      suggestions:
+        items:
+          type: string
+        type: array
       system_fingerprint:
         type: string
       usage:
@@ -71,6 +75,15 @@ definitions:
       content:
         type: string
     type: object
+  model.OpenAIImagesGenerationDataResponse:
+    properties:
+      b64_json:
+        type: string
+      revised_prompt:
+        type: string
+      url:
+        type: string
+    type: object
   model.OpenAIImagesGenerationRequest:
     properties:
       channelId:
@@ -79,17 +92,22 @@ definitions:
         type: string
       prompt:
         type: string
+      response_format:
+        type: string
     type: object
   model.OpenAIImagesGenerationResponse:
     properties:
       created:
         type: integer
+      dailyLimit:
+        type: boolean
       data:
         items:
-          properties:
-            url:
-              type: string
-          type: object
+          $ref: '#/definitions/model.OpenAIImagesGenerationDataResponse'
+        type: array
+      suggestions:
+        items:
+          type: string
         type: array
     type: object
   model.OpenAIMessage:
@@ -171,6 +189,21 @@ paths:
           schema:
             type: string
       summary: 删除频道
+      tags:
+      - channel
+  /api/del/all/cdp:
+    get:
+      consumes:
+      - application/json
+      description: 删除全部CDP临时频道[谨慎调用]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            type: string
+      summary: 删除全部CDP临时频道[谨慎调用]
       tags:
       - channel
   /api/thread/create:
