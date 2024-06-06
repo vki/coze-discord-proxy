@@ -234,7 +234,7 @@ func checkEnvVariable() {
 
 func loadBotConfig() {
 
-	common.SysLog("BOT_CONFIG."+BotConfig);
+	common.SysLog(fmt.Sprintf("LOAD BOT_CONFIG.%s",BotConfig));
 	if BotConfig != "" {
 		bytes := []byte(BotConfig)
 		// 解析JSON到结构体切片  并载入内存
