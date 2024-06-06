@@ -393,7 +393,7 @@ func OpenaiModels(c *gin.Context) {
 
 	secret := ""
 
-	common.LogWarn(c, fmt.Sprintf("OpenaiModels: %d DAILY LIMIT", len(discord.BotConfigList)))
+	common.SysLog(fmt.Sprintf("OpenaiModels: %d", len(discord.BotConfigList)))
 
 	if len(discord.BotConfigList) != 0 {
 		if secret = c.Request.Header.Get("Authorization"); secret != "" {
@@ -635,7 +635,7 @@ func getSendChannelIdAndCozeBotId(c *gin.Context, channelId *string, model strin
 	} else {
 		secret = c.Request.Header.Get("proxy-secret")
 	}
-	common.LogWarn(c, fmt.Sprintf("getSendChannelIdAndCozeBotId: %d ", len(discord.BotConfigList)))
+	common.SysLog(fmt.Sprintf("getSendChannelIdAndCozeBotId: %d ", len(discord.BotConfigList)))
 
 	// botConfigs不为空
 	if len(discord.BotConfigList) != 0 {
