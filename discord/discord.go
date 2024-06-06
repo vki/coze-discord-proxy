@@ -277,7 +277,7 @@ func loadBotConfig() {
 			}
 		}
 	}
-	common.SysLog(fmt.Sprintf("载入配置文件成功 BotConfigs: %+v", BotConfigList))
+	common.SysLog(fmt.Sprintf("载入配置文件成功 %d 条,BotConfigs: %+v",len(BotConfigList), BotConfigList))
 }
 
 // messageCreate handles the create messages in Discord.
