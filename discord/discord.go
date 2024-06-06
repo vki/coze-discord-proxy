@@ -690,6 +690,8 @@ func FilterConfigs(configs []model.BotConfig, secret, gptModel string, channelId
 		matchChannelId := channelId == nil || *channelId == "" || config.ChannelId == *channelId
 		if matchSecret && matchChannelId && matchGptModel {
 			filteredConfigs = append(filteredConfigs, config)
+			common.SysLog(fmt.Sprintf("FilterConfigs apped %s  ,secret %s",config.ChannelId,secret))
+
 		}
 	}
 	return filteredConfigs
