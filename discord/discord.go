@@ -234,9 +234,9 @@ func checkEnvVariable() {
 
 func loadBotConfig() {
 
-	common.SysLog("BOT_CONFIG.",BotConfig);
-	if BotConfig != nil {
-		bytes := []byte(text)
+	common.SysLog("BOT_CONFIG."+BotConfig);
+	if BotConfig != "" {
+		bytes := []byte(BotConfig)
 		// 解析JSON到结构体切片  并载入内存
 		err := json.Unmarshal(bytes, &BotConfigList)
 		if err != nil {
