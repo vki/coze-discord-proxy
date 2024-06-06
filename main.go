@@ -75,4 +75,6 @@ func main() {
 	if err := srv.Shutdown(ctxShutDown); err != nil {
 		common.FatalLog("HTTP server Shutdown failed:" + err.Error())
 	}
+	common.SysLog("COZE-DISCORD-PROXY " + common.Version + " end")
+
 }
