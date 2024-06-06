@@ -688,6 +688,7 @@ func FilterConfigs(configs []model.BotConfig, secret, gptModel string, channelId
 		matchSecret := secret == "" || config.ProxySecret == secret
 		matchGptModel := gptModel == "" || common.SliceContains(config.Model, gptModel)
 		matchChannelId := channelId == nil || *channelId == "" || config.ChannelId == *channelId
+		common.SysLog(fmt.Sprintf("FilterConfigs %v %v %v config.ProxySecret %v secret %v",matchSecret,matchGptModel,matchChannelId,config.ProxySecret,secret))
 		if matchSecret && matchChannelId && matchGptModel {
 			filteredConfigs = append(filteredConfigs, config)
 			common.SysLog(fmt.Sprintf("FilterConfigs apped %s  ,secret %s",config.ChannelId,secret))
