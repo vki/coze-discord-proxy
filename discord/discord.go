@@ -40,6 +40,7 @@ var CozeBotStayActiveEnable = os.Getenv("COZE_BOT_STAY_ACTIVE_ENABLE")
 var UserAgent = os.Getenv("USER_AGENT")
 var UserAuthorization = os.Getenv("USER_AUTHORIZATION")
 var UserAuthorizations = strings.Split(UserAuthorization, ",")
+var BotConfig = os.Getenv("BOT_CONFIG")
 
 var NoAvailableUserAuthChan = make(chan string)
 var CreateChannelRiskChan = make(chan string)
@@ -232,30 +233,42 @@ func checkEnvVariable() {
 }
 
 func loadBotConfig() {
-	// 检查文件是否存在
-	_, err := os.Stat("config/bot_config.json")
-	if err != nil {
-		if !os.IsNotExist(err) {
-			common.SysError("载入bot_config.json文件异常")
+
+	common.SysLog("BOT_CONFIG.",BotConfig);
+	if BotConfig != nil {
+		bytes := []byte(text)
+		// 解析JSON到结构体切片  并载入内存
+		err = json.Unmarshal(bytes, &BotConfigList)
+		if err != nil {
+			common.FatalLog("Error parsing JSON:", err)
 		}
-		return
+	}else{
+		// 检查文件是否存在
+		_, err := os.Stat("config/bot_config.json")
+		if err != nil {
+			common.FatalLog("载入bot_config.json文件异常,", err)
+			if !os.IsNotExist(err) {
+				common.SysError("载入bot_config.json文件异常")
+			}
+			return
+		}
+	
+		// 读取文件
+		file, err := os.ReadFile("config/bot_config.json")
+		if err != nil {
+			common.FatalLog("error reading bot config file,", err)
+		}
+		if len(file) == 0 {
+			return
+		}
+	
+		// 解析JSON到结构体切片  并载入内存
+		err = json.Unmarshal(file, &BotConfigList)
+		if err != nil {
+			common.FatalLog("Error parsing JSON:", err)
+		}
 	}
-
-	// 读取文件
-	file, err := os.ReadFile("config/bot_config.json")
-	if err != nil {
-		common.FatalLog("error reading bot config file,", err)
-	}
-	if len(file) == 0 {
-		return
-	}
-
-	// 解析JSON到结构体切片  并载入内存
-	err = json.Unmarshal(file, &BotConfigList)
-	if err != nil {
-		common.FatalLog("Error parsing JSON:", err)
-	}
-
+	
 	// 校验默认频道
 	if DefaultChannelEnable == "1" {
 		for _, botConfig := range BotConfigList {
