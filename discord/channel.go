@@ -148,6 +148,8 @@ func CreateChannelWithRetry(c *gin.Context, guildID, channelName string, channel
 					} else {
 						return "", fmt.Errorf("当前Discord服务器频道已满，且无CDP临时频道可删除")
 					}
+				} else {
+					return "", result.Err
 				}
 			}
 			// 成功创建频道，返回结果
@@ -157,7 +159,7 @@ func CreateChannelWithRetry(c *gin.Context, guildID, channelName string, channel
 		}
 	}
 	// tg发送通知
-	if telegram.NotifyTelegramBotToken != "" && telegram.TgBot != nil {
+	if !common.IsSameDay(CreateChannelRiskPreNotifyTime, time.Now()) && telegram.NotifyTelegramBotToken != "" && telegram.TgBot != nil {
 		go func() {
 			CreateChannelRiskChan <- "stop"
 		}()
