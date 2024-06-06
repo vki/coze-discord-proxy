@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// Initialize HTTP server
-	server := gin.New()
+	server := gin.Default()
 
 	server.Use(gin.Recovery())
 	server.Use(middleware.RequestId())
