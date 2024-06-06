@@ -238,7 +238,7 @@ func loadBotConfig() {
 	if BotConfig != nil {
 		bytes := []byte(text)
 		// 解析JSON到结构体切片  并载入内存
-		err = json.Unmarshal(bytes, &BotConfigList)
+		err := json.Unmarshal(bytes, &BotConfigList)
 		if err != nil {
 			common.FatalLog("Error parsing JSON:", err)
 		}
