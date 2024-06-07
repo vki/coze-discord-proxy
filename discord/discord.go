@@ -78,17 +78,18 @@ func StartBot(ctx context.Context, token string) {
 	// 注册消息处理函数
 	Session.AddHandler(messageCreate)
 	Session.AddHandler(messageUpdate)
-
-	// 打开websocket连接并开始监听
-	err = Session.Open()
-	if err != nil {
-		common.FatalLog("error opening connection,", err)
-		return
-	}
 	// 读取机器人配置文件
 	loadBotConfig()
 	// 验证docker配置文件
 	checkEnvVariable()
+	// 打开websocket连接并开始监听
+	err = Session.Open()
+	
+	if err != nil {
+		common.FatalLog("error opening connection,", err)
+		return
+	}
+	
 	common.SysLog("Bot is now running. Enjoy It.")
 
 	// 每日9点 重新加载userAuth
