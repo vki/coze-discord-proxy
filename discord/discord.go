@@ -197,9 +197,10 @@ func checkEnvVariable() {
 	}
 	if CozeBotId == "" {
 		common.FatalLog("环境变量 COZE_BOT_ID 未设置")
-	} else if Session.State.User.ID == CozeBotId {
-		common.FatalLog("环境变量 COZE_BOT_ID 不可为当前服务 BOT_TOKEN 关联的 BOT_ID")
 	}
+	// else if Session.State.User.ID == CozeBotId {
+	// 	common.FatalLog("环境变量 COZE_BOT_ID 不可为当前服务 BOT_TOKEN 关联的 BOT_ID")
+	// }
 
 	if ProxyUrl != "" {
 		_, _, err := NewProxyClient(ProxyUrl)
